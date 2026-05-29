@@ -15,7 +15,7 @@ class Drone:
     def move_to_zone(self):
         pass
 
-    def is_in_transit(self) -> bool:
+    def in_transit(self) -> bool:
         pass
 
     def is_delivered(self) -> bool:
