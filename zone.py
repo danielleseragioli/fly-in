@@ -2,7 +2,6 @@ from enum import Enum
 from occupiable import Occupiable
 
 
-
 class ZoneType(Enum):
     """Defines the possible types of zones in the simulation."""
 
@@ -10,6 +9,7 @@ class ZoneType(Enum):
     BLOCKED = "blocked"
     RESTRICTED = "restricted"
     PRIORITY = "priority"
+
 
 class Zone(Occupiable):
     """Represents a zone with capacity limits and drone access rules."""
@@ -26,8 +26,6 @@ class Zone(Occupiable):
         self.color = color
         self.current_drones = 0
 
-
-        
     def can_receive_drone(self) -> bool:
         """Return whether the zone can accept one more drone."""
 
