@@ -1,3 +1,4 @@
+from __future__ import annotations
 from enum import Enum
 from occupiable import Occupiable
 
@@ -18,20 +19,15 @@ class Zone(Occupiable):
                  zone_type: ZoneType, max_drones: int,
                  color: str):
         """Create a zone with its identifying data and capacity settings."""
-
+        super().__init__(max_drones)
         self.name = name
         self.coord = coord
         self.zone_type = zone_type
-        self.max_drones = max_drones
         self.color = color
-        self.current_drones = 0
 
     def can_receive_drone(self) -> bool:
         """Return whether the zone can accept one more drone."""
-
-        if self.zone_type == ZoneType.BLOCKED:
-            return False
-        elif self.current_drones < self.max_drones:
-            return True
-        else:
-            return False
+        return (
+            self.zone_type != ZoneType.BLOCKED
+            and super().can_receive_drone()
+        )
