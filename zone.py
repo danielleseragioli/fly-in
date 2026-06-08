@@ -31,3 +31,15 @@ class Zone(Occupiable):
             self.zone_type != ZoneType.BLOCKED
             and super().can_receive_drone()
         )
+
+    def is_blocked(self) -> bool:
+        """Verify is the zone is blocked"""
+        return self.zone_type == ZoneType.BLOCKED
+
+    def is_restricted(self) -> bool:
+        """Verify is the zone is restricted"""
+        return self.zone_type == ZoneType.RESTRICTED
+
+    def is_priority(self) -> bool:
+        """Verify is the zone is priority"""
+        return self.zone_type == ZoneType.PRIORITY
