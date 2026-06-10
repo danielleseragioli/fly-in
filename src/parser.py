@@ -1,6 +1,7 @@
 from graph import Graph
 from zone import Zone, ZoneType
 from edge import Edge
+from typing import Optional
 
 
 class Parser:
@@ -57,7 +58,7 @@ class Parser:
                 
 
 
-    def _parse_zone(self, line: str) -> Zone | None:
+    def _parse_zone(self, line: str) -> Optional[Zone]:
 
         """
         Parse the content after a hub prefix into a Zone object.
@@ -121,7 +122,7 @@ class Parser:
 
         return res
 
-    def _parse_connection(self, line: str, zones: dict[str, Zone]) -> Edge | None:
+    def _parse_connection(self, line: str, zones: dict[str, Zone]) -> Optional[Edge]:
         """
         Parse the content after 'connection:' into an Edge object.
 

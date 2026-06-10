@@ -1,5 +1,6 @@
 from zone import Zone
 from edge import Edge
+from typing import Optional
 
 
 class Graph:
@@ -59,7 +60,7 @@ class Graph:
                 return True
         return False
 
-    def get_edge(self, zone_a: Zone, zone_b: Zone) -> Edge | None:
+    def get_edge(self, zone_a: Zone, zone_b: Zone) -> Optional[Edge]:
         """Return the edge connecting two zones, or None if not found."""
         for edge in self.edges:
             if (edge.zone_a == zone_a and edge.zone_b == zone_b) or (
