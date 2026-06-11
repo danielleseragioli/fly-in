@@ -13,18 +13,20 @@ FPS = 10
 
 # -- colors --
 COLORS = {
-    "normal":     (70,  70,  90),
-    "restricted": (180, 90,  20),   
+    "normal":     (55, 34, 26),
+    "restricted": (234, 83,  39),   
     "priority":   (30,  140, 60),
-    "blocked":    (30,  30,  30),
+    "blocked":    (245, 172, 180),
     "start":      (30,  80,  200),
     "end":        (140, 30,  200)
 }
 COLOR_BACKGROUND = (245, 172,  180)
-COLOR_EDGE = (140, 30,  200)
+COLOR_EDGE_ACTIVE = (140, 30,  200)
+COLOR_EDGE = (55, 34, 26)
+COLOR_TEXT = (220, 220, 220)
 
 # -- sizes --
-ZONE_RADIUS = 8
+ZONE_RADIUS = 6
 DRONE_RADIUS = 10
 EDGE_WIDTH = 2
 MARGIN = 80
@@ -39,6 +41,8 @@ class Visualizer:
 
     def __init__(self, graph: Graph, simulation_steps: list[list[str]]) -> None:
 
+        pygame.init()
+
         self.graph = graph
         self.simulation_steps = simulation_steps
         self.curr_turn = 0
@@ -49,7 +53,6 @@ class Visualizer:
         self._init_drone_positions()  
         self.zone_positions = self._compute_positions()
 
-        pygame.init()
         self.screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
         pygame.display.set_caption(WINDOW_TITLE)
         self.clock = pygame.time.Clock()
@@ -65,7 +68,7 @@ class Visualizer:
         for drone_id in drone_ids:
             self.drone_positions[drone_id] = start_name
 
-    def _compute_position(self):
+    def _compute_positions(self):
 
         xs =[]
         ys =[]
@@ -156,17 +159,113 @@ class Visualizer:
         self._draw_edges()
         self._draw_zones()
         self._draw_drones()
+        self._draw_legend()
         self._draw_ui()
         pygame.display.flip()
 
     def _draw_edges(self):
-        pass
+        for edge in self.graph.edges:
+            p1 = self.zone_positions[edge.zone_a.name]
+            p2 = self.zone_positions[edge.zone_b.name]
+            is_active = False
+            for (origin, destination) in self.in_transit.values():
+                if (
+                    (origin == edge.zone_a.name and destination == edge.zone_b.name) or 
+                    (origin == edge.zone_b.name and destination == edge.zone_a.name)):
+                    is_active = True
+            if is_active:
+                color = COLOR_EDGE_ACTIVE
+                stroke = EDGE_WIDTH + 2
+            else:
+                color = COLOR_EDGE
+                stroke = EDGE_WIDTH
+            pygame.draw.line(self.screen, color, p1, p2, stroke)
 
     def _draw_zones(self):
-        pass
+        for (name, zone) in self.graph.zones.items():
+            position = self.zone_positions[name]
+            if name == self.graph.start_zone.name:
+                img = pygame.transform.scale(IMAGE_START, (120, 50))
+                rect = img.get_rect(center=position)
+                self.screen.blit(img, rect)
+            elif name == self.graph.end_zone.name:
+                img = pygame.transform.scale(IMAGE_END, (120, 50))
+                rect = img.get_rect(center=position)
+                self.screen.blit(img, rect)
+            else: 
+                color = COLORS.get(zone.zone_type.value, COLORS["normal"])
+                pygame.draw.circle(self.screen, color, position, ZONE_RADIUS)
 
     def _draw_drones(self):
-        pass
+        for (drone_id, zone_name) in self.drone_positions.items():
+            if drone_id in self.in_transit:
+                continue
+            position = self.zone_positions[zone_name]
+            img = pygame.transform.scale(IMAGE_DRONE, (120, 50))
+            rect = img.get_rect(center=position)
+            self.screen.blit(img, rect)
+            label = self.font.render(drone_id, True, (255, 255, 255))
+            self.screen.blit(label, (position[0] - label.get_width() // 2, position[1] - DRONE_RADIUS - 14))
+
+        for (drone_id, (origin, dest)) in self.in_transit.items():
+            p1 = self.zone_positions[origin]
+            p2 = self.zone_positions[dest]
+            position = ((p1[0] + p2[0]) // 2, (p1[1] + p2[1]) // 2)
+            img = pygame.transform.scale(IMAGE_DRONE, (120, 50))
+            rect = img.get_rect(center=position)
+            self.screen.blit(img, rect)
+            label = self.font.render(drone_id, True, (255, 255, 255))
+            self.screen.blit(label, (position[0] - label.get_width() // 2, position[1] - DRONE_RADIUS - 14))
+
+    def _draw_legend(self):
+
+        legend_items = [
+            ("Normal", COLORS["normal"]),
+            ("Restricted", COLORS["restricted"]),
+            ("Priority", COLORS["priority"]),
+            ("Blocked", COLORS["blocked"]),
+        ]
+
+        x = WINDOW_WIDTH - 170
+        y = 20
+
+        for label, color in legend_items:
+
+            pygame.draw.circle(
+                self.screen,
+                color,
+                (x, y + 8),
+                8
+            )
+
+            text_surface = self.font.render(label, True, (255, 255, 255))
+            self.screen.blit(text_surface, (x + 20, y))
+
+            y += 25
 
     def _draw_ui(self):
-        pass
+        
+        text = f"Turn: {self.curr_turn} / {len(self.simulation_steps)}"
+        surface = self.font.render(text, True, COLOR_TEXT)
+        self.screen.blit(surface, (20, 20))
+
+        text = f"Auto: {'ON' if self.auto_play else 'OFF'}"
+        surface = self.font.render(text, True, COLOR_TEXT)
+        self.screen.blit(surface, (20, 46))
+
+        if self.curr_turn >= len(self.simulation_steps):
+            text = f"Completed in {len(self.simulation_steps)} turns!"
+            surface = self.font.render(text, True, COLOR_TEXT)
+            x = WINDOW_WIDTH // 2 - surface.get_width() // 2
+            self.screen.blit(surface, (x, 20))
+        
+        bar_height = 35
+        pygame.draw.rect(
+            self.screen,
+            (0, 0, 0),
+            (0, WINDOW_HEIGHT - bar_height, WINDOW_WIDTH, bar_height)
+        )
+
+        text = "[SPACE] Next   [A] Auto   [R] Restart   [Q] Quit"
+        surface = self.font.render(text, True, (255, 255, 255))
+        self.screen.blit(surface, (20, WINDOW_HEIGHT - 26))
