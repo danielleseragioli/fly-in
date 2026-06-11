@@ -1,5 +1,5 @@
-from zone import Zone
-from edge import Edge
+from .zone import Zone
+from .edge import Edge
 from typing import Optional
 
 

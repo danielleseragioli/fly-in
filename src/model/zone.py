@@ -1,6 +1,6 @@
 from __future__ import annotations
 from enum import Enum
-from occupiable import Occupiable
+from .occupiable import Occupiable
 
 
 class ZoneType(Enum):

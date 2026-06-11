@@ -1,6 +1,6 @@
-from graph import Graph
-from zone import Zone, ZoneType
-from reservation_table import ReservationTable
+from model.graph import Graph
+from model.zone import Zone, ZoneType
+from .reservation_table import ReservationTable
 
 
 class Pathfinder:

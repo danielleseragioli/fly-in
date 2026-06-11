@@ -1,7 +1,8 @@
 """Module for managing drone entities and their movement through zones."""
 
-from zone import Zone
-from edge import Edge
+from .zone import Zone
+from .edge import Edge
+from typing import Optional
 
 
 class Drone:
@@ -10,10 +11,10 @@ class Drone:
         """Initialize a drone with ID and starting zone."""
         self.drone_id = drone_id
         self.current_zone = start_zone
-        self.target_zone = None
-        self.is_in_transit = False
-        self.arrival_turn = None
-        self.is_delivered = False
+        self.target_zone: Optional[Zone] = None
+        self.is_in_transit: bool = False
+        self.arrival_turn: Optional[int] = None
+        self.is_delivered: bool = False
 
     def move_to_zone(self, dest_zone: Zone) -> bool:
         """Move drone to destination zone if capacity allows."""

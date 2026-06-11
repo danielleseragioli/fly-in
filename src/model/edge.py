@@ -1,5 +1,5 @@
-from zone import Zone
-from occupiable import Occupiable
+from .zone import Zone
+from .occupiable import Occupiable
 
 
 class Edge(Occupiable):

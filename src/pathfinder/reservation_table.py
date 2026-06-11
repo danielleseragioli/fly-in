@@ -3,8 +3,8 @@ class ReservationTable:
 
     def __init__(self):
         """Initialize empty reservation stores."""
-        self.zone_reservations = {}
-        self.edge_reservations = {}
+        self.zone_reservations: dict[tuple[str, int], int] = {}
+        self.edge_reservations: dict[tuple[tuple[str, str], int], int] = {}
 
     def is_zone_available(self, zone_name: str, turn: int, max_capacity: int) -> bool:
         """Return whether a zone has free capacity at a given turn."""
@@ -17,12 +17,12 @@ class ReservationTable:
         curr_reservation = self.edge_reservations.get((edge_key, turn), 0)
         return curr_reservation < max_capacity
 
-    def reserve_zone(self, zone_name: str, turn: int):
+    def reserve_zone(self, zone_name: str, turn: int) -> None:
         """Reserve one slot in a zone for a turn."""
         curr_occupation = self.zone_reservations.get((zone_name, turn), 0)
         self.zone_reservations[(zone_name, turn)] = curr_occupation + 1
 
-    def reserve_edge(self, zona_a: str, zona_b: str, turn: int):
+    def reserve_edge(self, zona_a: str, zona_b: str, turn: int) -> None:
         """Reserve one slot on an edge for a turn."""
         edge_key = tuple(sorted([zona_a, zona_b]))
         curr_occupation = self.edge_reservations.get((edge_key, turn), 0)
