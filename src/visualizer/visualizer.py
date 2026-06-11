@@ -70,8 +70,8 @@ class Visualizer:
 
     def _compute_positions(self):
 
-        xs =[]
-        ys =[]
+        xs = []
+        ys = []
         for zone in self.graph.zones.values():
             x, y = zone.coord
             xs.append(x)
@@ -85,7 +85,7 @@ class Visualizer:
         range_x = max_x - min_x
         if range_x == 0:
             range_x = 1
-        
+
         range_y = max_y - min_y
         if range_y == 0:
             range_y = 1
@@ -94,10 +94,18 @@ class Visualizer:
         usable_h = WINDOW_HEIGHT - MARGIN * 2
 
         positions = {}
+        start_zone_name = self.graph.start_zone.name
+        end_zone_name = self.graph.end_zone.name
+
         for zone in self.graph.zones.values():
             x, y = zone.coord
             px = MARGIN + int((x - min_x) / range_x * usable_w)
-            py = MARGIN + int((y - min_y) / range_y * usable_h)
+
+            if zone.name == start_zone_name or zone.name == end_zone_name:
+                py = WINDOW_HEIGHT // 2
+            else:
+                py = MARGIN + int((y - min_y) / range_y * usable_h)
+
             positions[zone.name] = (px, py)
 
         return positions
@@ -106,7 +114,7 @@ class Visualizer:
         auto_timer = 0
         while True:
             last_frame_time = self.clock.tick(FPS)
-        
+
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
@@ -155,7 +163,7 @@ class Visualizer:
             self.screen.blit(bkg, (0, 0))
         else:
             self.screen.fill(COLOR_BACKGROUND)
-        
+
         self._draw_edges()
         self._draw_zones()
         self._draw_drones()
@@ -170,8 +178,11 @@ class Visualizer:
             is_active = False
             for (origin, destination) in self.in_transit.values():
                 if (
-                    (origin == edge.zone_a.name and destination == edge.zone_b.name) or 
-                    (origin == edge.zone_b.name and destination == edge.zone_a.name)):
+                    (origin == edge.zone_a.name and
+                     destination == edge.zone_b.name) or
+                    (origin == edge.zone_b.name and
+                     destination == edge.zone_a.name)
+                ):
                     is_active = True
             if is_active:
                 color = COLOR_EDGE_ACTIVE
@@ -192,7 +203,7 @@ class Visualizer:
                 img = pygame.transform.scale(IMAGE_END, (120, 50))
                 rect = img.get_rect(center=position)
                 self.screen.blit(img, rect)
-            else: 
+            else:
                 color = COLORS.get(zone.zone_type.value, COLORS["normal"])
                 pygame.draw.circle(self.screen, color, position, ZONE_RADIUS)
 
@@ -244,7 +255,7 @@ class Visualizer:
             y += 25
 
     def _draw_ui(self):
-        
+
         text = f"Turn: {self.curr_turn} / {len(self.simulation_steps)}"
         surface = self.font.render(text, True, COLOR_TEXT)
         self.screen.blit(surface, (20, 20))
@@ -258,7 +269,7 @@ class Visualizer:
             surface = self.font.render(text, True, COLOR_TEXT)
             x = WINDOW_WIDTH // 2 - surface.get_width() // 2
             self.screen.blit(surface, (x, 20))
-        
+
         bar_height = 35
         pygame.draw.rect(
             self.screen,
