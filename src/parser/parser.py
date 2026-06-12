@@ -25,56 +25,80 @@ class Parser:
             nb_drones_seen: bool = False
             seen_connections: set[tuple[str, str]] = set()
 
-            for line in file:
+            for line_number, line in enumerate(file, start=1):
                 line = line.strip()
 
                 if not line or line.startswith("#"):
                     continue
 
-                if not nb_drones_seen:
-                    if not line.startswith("nb_drones:"):
-                        raise ValueError("First line must define nb_drones")
-                    nb_drones_seen = True
-
                 if line.startswith("nb_drones:"):
-                    parts: list[str] = line.split(":")
-                    nb_drones = int(parts[1].strip())
+                    if nb_drones_seen:
+                        raise ValueError(f"Line {line_number}: duplicate nb_drones definition")
+                    nb_drones_seen = True
+                    parts:list[str]  = line.split(":", 1)
+                    if len(parts) != 2:
+                        raise ValueError(f"Line {line_number}: invalid nb_drones format")
+                    try:
+                        nb_drones = int(parts[1].strip())
+                    except ValueError:
+                        raise ValueError(f"Line {line_number}: invalid nb_drones value")
+                    if nb_drones <= 0:
+                        raise ValueError(f"Line {line_number}: nb_drones must be positive")
 
                 elif line.startswith("start_hub:"):
                     _, part2 = line.split(":", 1)
                     zone = self._parse_zone(part2.strip())
-                    start_zone = zone
-                    zones[zone.name] = zone
+                    if start_zone is not None:
+                        raise ValueError(f"Line {line_number}: multiple start_hub definitions")
+                    else:
+                        start_zone = zone
+                    if zone.name in zones:
+                        raise ValueError(f"Line {line_number}: duplicate zone '{zone.name}'")
+                    else:
+                        zones[zone.name] = zone
 
                 elif line.startswith("end_hub:"):
                     _, part2 = line.split(":", 1)
                     zone = self._parse_zone(part2.strip())
-                    end_zone = zone
-                    zones[zone.name] = zone
+                    if end_zone is not None:
+                        raise ValueError(f"Line {line_number}: multiple end_hub definitions")
+                    else:
+                        end_zone = zone
+                    if zone.name in zones:
+                        raise ValueError(f"Line {line_number}: duplicate zone '{zone.name}'")
+                    else:
+                        zones[zone.name] = zone
 
                 elif line.startswith("hub:"):
                     _, data = line.split(":", 1)
                     zone = self._parse_zone(data.strip())
-                    zones[zone.name] = zone
+                    if zone.name in zones:
+                        raise ValueError(f"Line {line_number}: duplicate zone '{zone.name}'")
+                    else:
+                        zones[zone.name] = zone
 
                 elif line.startswith("connection:"):
                     _, data = line.split(":", 1)
-                    edge = self._parse_connection(data.strip(), zones)
+                    edge = self._parse_connection(data.strip(), zones, line_number)
                     if edge:
                         edge_key = tuple(sorted([edge.zone_a.name, edge.zone_b.name]))
                         if edge_key in seen_connections:
-                            raise ValueError(f"Duplicate connection: {line}")
+                            raise ValueError(f"Line {line_number}: duplicate connection")
                         seen_connections.add(edge_key)
                         edges.append(edge)
+                else:
+                    raise ValueError(f"Line {line_number}: unknown directive")
 
         if start_zone is None:
-            raise ValueError("No start_hub defined")
+            raise ValueError("Invalid input: missing start_hub")
         if end_zone is None:
-            raise ValueError("No end_hub defined")
+            raise ValueError("Invalid input: missing end_hub")
+        if not nb_drones_seen:
+            raise ValueError("Invalid input: missing nb_drones")
 
         return (Graph(zones, edges, start_zone, end_zone), nb_drones)
 
-    def _parse_zone(self, line: str) -> Optional[Zone]:
+    def _parse_zone(self, line: str) -> Zone:
         """Parse the content after a hub prefix into a Zone object.
 
         Args:
@@ -88,7 +112,7 @@ class Parser:
             Output: Zone("roof1", (3, 4), ZoneType.RESTRICTED, 2, "red")
         """
         if not line:
-            return None
+            raise ValueError("Empty zone definition")
 
         if "[" in line:
             part1, part2 = line.split("[", 1)
@@ -98,9 +122,19 @@ class Parser:
             metadata = {}
 
         part1_split = part1.split()
+
+        if len(part1_split) < 3:
+            raise ValueError(f"Invalid zone format: {line}")
         name = part1_split[0]
-        x = int(part1_split[1])
-        y = int(part1_split[2])
+
+        if "-" in name or " " in name:
+            raise ValueError(f"Invalid zone name: {name}")
+
+        try:
+            x = int(part1_split[1])
+            y = int(part1_split[2])
+        except (IndexError, ValueError):
+            raise ValueError(f"Invalid coordinates for zone: {line}")
 
         try:
             zone_type = ZoneType(metadata.get("zone", "normal"))
@@ -108,7 +142,12 @@ class Parser:
             raise ValueError(f"Invalid zone type: {metadata.get('zone')}")
 
         color = metadata.get("color", "")
-        max_drones = int(metadata.get("max_drones", "1"))
+        try:
+            max_drones = int(metadata.get("max_drones", "1"))
+        except ValueError:
+            raise ValueError("Invalid max_drones value")
+        if max_drones <= 0:
+            raise ValueError("max_drones must be positive")
 
         return Zone(name, (x, y), zone_type, max_drones, color)
 
@@ -130,12 +169,14 @@ class Parser:
         parts = metadata_str.split()
         res: dict[str, str] = {}
         for item in parts:
-            key, value = item.split("=")
+            if "=" not in item:
+                raise ValueError(f"Invalid metadata format: {item}")
+            key, value = item.split("=", 1)
             res[key] = value
 
         return res
 
-    def _parse_connection(self, line: str, zones: dict[str, Zone]) -> Optional[Edge]:
+    def _parse_connection(self, line: str, zones: dict[str, Zone], line_number: int) -> Edge:
         """Parse the content after 'connection:' into an Edge object.
 
         Args:
@@ -151,8 +192,7 @@ class Parser:
             Output: Edge(zones["corridorA"], zones["tunnelB"], 2)
         """
         if not line:
-            return None
-
+            raise ValueError("Empty connection definition")
         if "[" in line:
             part1, part2 = line.split("[", 1)
             metadata = self._parse_metadata("[" + part2)
@@ -160,13 +200,27 @@ class Parser:
             part1 = line
             metadata = {}
 
-        name_zone_a, name_zone_b = part1.strip().split("-")
+        if "-" not in part1:
+            raise ValueError(f"Line {line_number}: invalid connection format: {line}")
+
+        parts = part1.split("-")
+        if len(parts) != 2:
+            raise ValueError(f"Line {line_number}: invalid connection format: {line}")
+
+        name_zone_a, name_zone_b = parts    
         zone_a = zones.get(name_zone_a.strip())
         zone_b = zones.get(name_zone_b.strip())
 
         if zone_a is None or zone_b is None:
-            raise ValueError(f"Unknown zone in connection: {line}")
+            raise ValueError(f"Line {line_number}: unknown zone in connection")
 
-        max_link_capacity = int(metadata.get("max_link_capacity", "1"))
+        value = metadata.get("max_link_capacity", "1")
+        try:
+            max_link_capacity = int(value)
+        except (ValueError, TypeError):
+            raise ValueError(f"Line {line_number}: invalid max_link_capacity")
+
+        if max_link_capacity <= 0:
+            raise ValueError(f"Line {line_number}: max_link_capacity must be positive")
 
         return Edge(zone_a, zone_b, max_link_capacity)

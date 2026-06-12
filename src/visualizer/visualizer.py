@@ -26,7 +26,7 @@ COLOR_EDGE = (55, 34, 26)
 COLOR_TEXT = (220, 220, 220)
 
 # -- sizes --
-ZONE_RADIUS = 6
+ZONE_RADIUS = 4
 DRONE_RADIUS = 10
 EDGE_WIDTH = 2
 MARGIN = 80
@@ -212,11 +212,19 @@ class Visualizer:
             if drone_id in self.in_transit:
                 continue
             position = self.zone_positions[zone_name]
-            img = pygame.transform.scale(IMAGE_DRONE, (120, 50))
+            if zone_name == self.graph.start_zone.name:
+                position = (position[0], position[1] + 45)
+            elif zone_name == self.graph.end_zone.name:
+                position = (position[0], position[1] + 45)
+            img = pygame.transform.scale(IMAGE_DRONE, (60, 60))
             rect = img.get_rect(center=position)
             self.screen.blit(img, rect)
-            label = self.font.render(drone_id, True, (255, 255, 255))
-            self.screen.blit(label, (position[0] - label.get_width() // 2, position[1] - DRONE_RADIUS - 14))
+            if zone_name not in (
+                self.graph.start_zone.name,
+                self.graph.end_zone.name
+            ):
+                label = self.font.render(drone_id, True, (255, 255, 255))
+                self.screen.blit(label, (position[0] - label.get_width() // 2, position[1] - DRONE_RADIUS - 14))
 
         for (drone_id, (origin, dest)) in self.in_transit.items():
             p1 = self.zone_positions[origin]
