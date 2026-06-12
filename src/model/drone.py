@@ -15,6 +15,8 @@ class Drone:
         self.is_in_transit: bool = False
         self.arrival_turn: Optional[int] = None
         self.is_delivered: bool = False
+        self.planned_path: list[tuple[str, int]] = []
+        self.path_index: int = 0
 
     def move_to_zone(self, dest_zone: Zone) -> bool:
         """Move drone to destination zone if capacity allows."""

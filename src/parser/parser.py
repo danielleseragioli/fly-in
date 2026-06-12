@@ -35,7 +35,7 @@ class Parser:
                     if nb_drones_seen:
                         raise ValueError(f"Line {line_number}: duplicate nb_drones definition")
                     nb_drones_seen = True
-                    parts:list[str]  = line.split(":", 1)
+                    parts: list[str] = line.split(":", 1)
                     if len(parts) != 2:
                         raise ValueError(f"Line {line_number}: invalid nb_drones format")
                     try:

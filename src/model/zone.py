@@ -33,13 +33,13 @@ class Zone(Occupiable):
         )
 
     def is_blocked(self) -> bool:
-        """Verify is the zone is blocked"""
+        """Return whether the zone is blocked."""
         return self.zone_type == ZoneType.BLOCKED
 
     def is_restricted(self) -> bool:
-        """Verify is the zone is restricted"""
+        """Return whether the zone is restricted."""
         return self.zone_type == ZoneType.RESTRICTED
 
     def is_priority(self) -> bool:
-        """Verify is the zone is priority"""
+        """Return whether the zone is a priority zone."""
         return self.zone_type == ZoneType.PRIORITY

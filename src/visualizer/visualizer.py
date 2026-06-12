@@ -1,6 +1,5 @@
 import pygame
 import sys
-from typing import Optional
 from model.graph import Graph
 
 # ======= ui settings =======
@@ -38,8 +37,10 @@ IMAGE_START = pygame.image.load("assets/start.png")
 IMAGE_END = pygame.image.load("assets/end.png")
 
 class Visualizer:
+    """Render the simulation step by step with pygame."""
 
     def __init__(self, graph: Graph, simulation_steps: list[list[str]]) -> None:
+        """Initialize the visualizer state and load the map layout."""
 
         pygame.init()
 
@@ -48,8 +49,8 @@ class Visualizer:
         self.curr_turn = 0
         self.auto_play = False
 
-        self.in_transit = {}
-        self.drone_positions = {}
+        self.in_transit: dict[str, tuple[str, str]] = {}
+        self.drone_positions: dict[str, str] = {}
         self._init_drone_positions()  
         self.zone_positions = self._compute_positions()
 
@@ -58,9 +59,10 @@ class Visualizer:
         self.clock = pygame.time.Clock()
         self.font = pygame.font.SysFont("monospace", 16)
 
-    def _init_drone_positions(self):
+    def _init_drone_positions(self) -> None:
+        """Place every drone on the start zone before playback begins."""
         start_name = self.graph.start_zone.name
-        drone_ids = set()
+        drone_ids: set[str] = set()
         for turn in self.simulation_steps:
             for mov in turn:
                 drone_id = mov.split("-")[0]
@@ -68,10 +70,11 @@ class Visualizer:
         for drone_id in drone_ids:
             self.drone_positions[drone_id] = start_name
 
-    def _compute_positions(self):
+    def _compute_positions(self) -> dict[str, tuple[int, int]]:
+        """Map graph coordinates to screen positions."""
 
-        xs = []
-        ys = []
+        xs: list[int] = []
+        ys: list[int] = []
         for zone in self.graph.zones.values():
             x, y = zone.coord
             xs.append(x)
@@ -93,7 +96,7 @@ class Visualizer:
         usable_w = WINDOW_WIDTH - MARGIN * 2
         usable_h = WINDOW_HEIGHT - MARGIN * 2
 
-        positions = {}
+        positions: dict[str, tuple[int, int]] = {}
         start_zone_name = self.graph.start_zone.name
         end_zone_name = self.graph.end_zone.name
 
@@ -110,7 +113,8 @@ class Visualizer:
 
         return positions
 
-    def run(self):
+    def run(self) -> None:
+        """Start the pygame loop and handle keyboard input."""
         auto_timer = 0
         while True:
             last_frame_time = self.clock.tick(FPS)
@@ -140,7 +144,8 @@ class Visualizer:
 
             self._draw()
 
-    def _advance_turn(self):
+    def _advance_turn(self) -> None:
+        """Apply the movements scheduled for the current turn."""
         if self.curr_turn >= len(self.simulation_steps):
             return
         moves = self.simulation_steps[self.curr_turn]
@@ -157,7 +162,8 @@ class Visualizer:
                     self.in_transit[drone_id] = (origin, destination)
         self.curr_turn += 1
 
-    def _draw(self):
+    def _draw(self) -> None:
+        """Render one frame of the current simulation state."""
         if IMAGE_BKG:
             bkg = pygame.transform.scale(IMAGE_BKG, (WINDOW_WIDTH, WINDOW_HEIGHT))
             self.screen.blit(bkg, (0, 0))
@@ -171,7 +177,8 @@ class Visualizer:
         self._draw_ui()
         pygame.display.flip()
 
-    def _draw_edges(self):
+    def _draw_edges(self) -> None:
+        """Draw all graph connections."""
         for edge in self.graph.edges:
             p1 = self.zone_positions[edge.zone_a.name]
             p2 = self.zone_positions[edge.zone_b.name]
@@ -192,7 +199,8 @@ class Visualizer:
                 stroke = EDGE_WIDTH
             pygame.draw.line(self.screen, color, p1, p2, stroke)
 
-    def _draw_zones(self):
+    def _draw_zones(self) -> None:
+        """Draw zones, highlighting the start and end hubs."""
         for (name, zone) in self.graph.zones.items():
             position = self.zone_positions[name]
             if name == self.graph.start_zone.name:
@@ -207,7 +215,8 @@ class Visualizer:
                 color = COLORS.get(zone.zone_type.value, COLORS["normal"])
                 pygame.draw.circle(self.screen, color, position, ZONE_RADIUS)
 
-    def _draw_drones(self):
+    def _draw_drones(self) -> None:
+        """Draw drones at their current positions."""
         for (drone_id, zone_name) in self.drone_positions.items():
             if drone_id in self.in_transit:
                 continue
@@ -236,7 +245,8 @@ class Visualizer:
             label = self.font.render(drone_id, True, (255, 255, 255))
             self.screen.blit(label, (position[0] - label.get_width() // 2, position[1] - DRONE_RADIUS - 14))
 
-    def _draw_legend(self):
+    def _draw_legend(self) -> None:
+        """Draw the color legend for zone types."""
 
         legend_items = [
             ("Normal", COLORS["normal"]),
@@ -262,7 +272,8 @@ class Visualizer:
 
             y += 25
 
-    def _draw_ui(self):
+    def _draw_ui(self) -> None:
+        """Draw the HUD with turn and control information."""
 
         text = f"Turn: {self.curr_turn} / {len(self.simulation_steps)}"
         surface = self.font.render(text, True, COLOR_TEXT)
