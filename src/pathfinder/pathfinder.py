@@ -1,23 +1,23 @@
 from model.graph import Graph
 from model.zone import Zone, ZoneType
 from .reservation_table import ReservationTable
+import heapq
 
 
 class Pathfinder:
     """Finds optimal paths through the graph using Dijkstra on a space-time graph."""
 
-    def __init__(self) -> None:
-        """Initialize the pathfinder."""
-        pass
+    def __init__(self, graph: Graph) -> None:
+        """Initialize the pathfinder with the graph."""
+        self.graph = graph
 
     def dijkstra(
         self,
-        graph: Graph,
         start_zone: Zone,
         end_zone: Zone,
         reservation_table: ReservationTable,
         start_turn: int = 0,
-    ) -> list[tuple[str, int]]:
+        ) -> list[tuple[str, int]]:
         """Find shortest path from start to end using space-time Dijkstra.
 
         Returns a list of (zone_name, turn) tuples representing the planned path.
@@ -32,17 +32,17 @@ class Pathfinder:
         distances[node_start] = 0
         previous[node_start] = None
 
-        unvisited: set[tuple[str, int]] = {node_start}
+        counter: int = 0
+        heap: list[tuple[float, int, int, str, int]] = [(0.0, 0, 0, start_zone.name, start_turn)]
 
-        while unvisited:
-            current = min(unvisited, key=lambda n: distances.get(n, float('inf')))
-            unvisited.discard(current)
+        while heap:
+            d, _, _, curr_zone_name, curr_turn = heapq.heappop(heap)
+            current = (curr_zone_name, curr_turn)
 
             if current in visited:
                 continue
             visited.add(current)
 
-            curr_zone_name, curr_turn = current
 
             if curr_zone_name == end_zone.name:
                 break
@@ -50,10 +50,10 @@ class Pathfinder:
             if curr_turn >= MAX_TURN:
                 continue
 
-            curr_zone = graph.get_zone(curr_zone_name)
-            curr_dist = distances[current]
+            curr_zone = self.graph.get_zone(curr_zone_name)
+            curr_dist = d
 
-            for neighbor in graph.get_neighbors(curr_zone):
+            for neighbor in self.graph.get_neighbors(curr_zone):
                 if neighbor.zone_type == ZoneType.BLOCKED:
                     continue
 
@@ -63,7 +63,7 @@ class Pathfinder:
                 if next_turn > MAX_TURN:
                     continue
 
-                edge = graph.get_edge(curr_zone, neighbor)
+                edge = self.graph.get_edge(curr_zone, neighbor)
 
                 if edge:
                     if not reservation_table.is_edge_available(
@@ -75,9 +75,18 @@ class Pathfinder:
                     neighbor.name != end_zone.name
                     and neighbor.name != start_zone.name
                 ):
-                    if not reservation_table.is_zone_available(
-                        neighbor.name, next_turn, neighbor.max_capacity
-                    ):
+                    if neighbor.zone_type == ZoneType.RESTRICTED:
+                        ok = all(
+                            reservation_table.is_zone_available(
+                                neighbor.name, t, neighbor.max_capacity
+                            )
+                            for t in range(curr_turn + 1, next_turn + 1)
+                        )
+                    else:
+                        ok = reservation_table.is_zone_available(
+                            neighbor.name, next_turn, neighbor.max_capacity
+                        )
+                    if not ok:
                         continue
 
                 next_node = (neighbor.name, next_turn)
@@ -86,7 +95,9 @@ class Pathfinder:
                 if new_dist < distances.get(next_node, float('inf')):
                     distances[next_node] = new_dist
                     previous[next_node] = current
-                    unvisited.add(next_node)
+                    counter += 1
+                    priority_bonus = -1 if neighbor.zone_type == ZoneType.PRIORITY else 0
+                    heapq.heappush(heap, (new_dist, priority_bonus, counter, neighbor.name, next_turn))
 
             wait_turn = curr_turn + 1
             if wait_turn <= MAX_TURN:
@@ -102,7 +113,8 @@ class Pathfinder:
                     if wait_dist < distances.get(wait_node, float('inf')):
                         distances[wait_node] = wait_dist
                         previous[wait_node] = current
-                        unvisited.add(wait_node)
+                        counter += 1
+                        heapq.heappush(heap, (wait_dist, 0, counter, curr_zone_name, wait_turn))
 
         end_nodes = [
             (n, d) for n, d in distances.items()
