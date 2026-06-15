@@ -27,10 +27,10 @@ class Zone(Occupiable):
 
     def can_receive_drone(self) -> bool:
         """Return whether the zone can accept one more drone."""
-        return (
-            self.zone_type != ZoneType.BLOCKED
-            and super().can_receive_drone()
-        )
+        if self.zone_type == ZoneType.BLOCKED:
+            return False
+
+        return len(self.drones) < self.max_capacity
 
     def is_blocked(self) -> bool:
         """Return whether the zone is blocked."""

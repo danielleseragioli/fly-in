@@ -8,7 +8,8 @@ from pathfinder.reservation_table import ReservationTable
 class Simulator:
     """Runs the drone routing simulation."""
 
-    def __init__(self, graph: Graph, nb_drones: int, pathfinder: Pathfinder) -> None:
+    def __init__(self, graph: Graph, nb_drones: int,
+                 pathfinder: Pathfinder) -> None:
         """Initialize simulator with graph, drone count and pathfinder.
 
         Args:
@@ -25,7 +26,8 @@ class Simulator:
         self.simulation_steps: list[list[str]] = []
 
     def create_drones(self) -> None:
-        """Plan collision-free paths for all drones using the reservation table."""
+        """Plan collision-free paths for all drones
+        using the reservation table."""
         start = self.graph.start_zone
         end = self.graph.end_zone
         table = ReservationTable()
@@ -52,52 +54,53 @@ class Simulator:
                         table.reserve_edge(zone_name, next_zone_name, turn)
                         next_zone = self.graph.get_zone(next_zone_name)
                         if next_zone.zone_type == ZoneType.RESTRICTED:
-                            table.reserve_edge(zone_name, next_zone_name, turn + 1)
+                            table.reserve_edge(zone_name,
+                                               next_zone_name, turn + 1)
 
             self.drones.append(drone)
 
     def run_simulator(self) -> None:
-        """Execute the simulation by moving all drones along their planned paths."""
+        """Execute the simulation by moving all drones
+        along their planned paths."""
         end = self.graph.end_zone
         delivered: set[str] = set()
         self.turn = 0
-
         while len(delivered) < len(self.drones):
             self.turn += 1
             movements: list[str] = []
-
             for drone in self.drones:
                 if drone.is_delivered:
                     continue
-
                 path = drone.planned_path
                 idx = drone.path_index
-
                 while idx < len(path) and path[idx][1] < self.turn:
                     idx += 1
                 drone.path_index = idx
-
                 if idx >= len(path):
                     drone.is_delivered = True
                     delivered.add(drone.drone_id)
                     continue
-
                 zone_name, target_turn = path[idx]
-
                 if target_turn == self.turn:
                     if zone_name != drone.current_zone.name:
                         movements.append(f"{drone.drone_id}-{zone_name}")
                         drone.current_zone = self.graph.get_zone(zone_name)
-
                     if zone_name == end.name:
                         drone.is_delivered = True
                         delivered.add(drone.drone_id)
-
                     drone.path_index += 1
-
+                elif target_turn == self.turn + 1:
+                    next_zone = self.graph.get_zone(zone_name)
+                    if (
+                        next_zone.zone_type == ZoneType.RESTRICTED
+                        and zone_name != drone.current_zone.name
+                    ):
+                        origin = drone.current_zone.name
+                        movements.append(
+                            f"{drone.drone_id}-{origin}-{zone_name}"
+                        )
             if movements:
                 self.simulation_steps.append(movements)
-
             if self.turn > self.max_turns:
                 print("Turn limit reached")
                 break

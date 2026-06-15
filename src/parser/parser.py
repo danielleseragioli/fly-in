@@ -33,27 +33,33 @@ class Parser:
 
                 if line.startswith("nb_drones:"):
                     if nb_drones_seen:
-                        raise ValueError(f"Line {line_number}: duplicate nb_drones definition")
+                        raise ValueError(f"Line {line_number}: duplicate"
+                                         + "nb_drones definition")
                     nb_drones_seen = True
                     parts: list[str] = line.split(":", 1)
                     if len(parts) != 2:
-                        raise ValueError(f"Line {line_number}: invalid nb_drones format")
+                        raise ValueError(f"Line {line_number}: invalid"
+                                         + "nb_drones format")
                     try:
                         nb_drones = int(parts[1].strip())
                     except ValueError:
-                        raise ValueError(f"Line {line_number}: invalid nb_drones value")
+                        raise ValueError(f"Line {line_number}: invalid"
+                                         + "nb_drones value")
                     if nb_drones <= 0:
-                        raise ValueError(f"Line {line_number}: nb_drones must be positive")
+                        raise ValueError(f"Line {line_number}: nb_drones"
+                                         + "must be positive")
 
                 elif line.startswith("start_hub:"):
                     _, part2 = line.split(":", 1)
                     zone = self._parse_zone(part2.strip())
                     if start_zone is not None:
-                        raise ValueError(f"Line {line_number}: multiple start_hub definitions")
+                        raise ValueError(f"Line {line_number}: multiple"
+                                         + "start_hub definitions")
                     else:
                         start_zone = zone
                     if zone.name in zones:
-                        raise ValueError(f"Line {line_number}: duplicate zone '{zone.name}'")
+                        raise ValueError(f"Line {line_number}: "
+                                         + "duplicate zone '{zone.name}'")
                     else:
                         zones[zone.name] = zone
 
@@ -61,11 +67,13 @@ class Parser:
                     _, part2 = line.split(":", 1)
                     zone = self._parse_zone(part2.strip())
                     if end_zone is not None:
-                        raise ValueError(f"Line {line_number}: multiple end_hub definitions")
+                        raise ValueError(f"Line {line_number}: multiple "
+                                         + "end_hub definitions")
                     else:
                         end_zone = zone
                     if zone.name in zones:
-                        raise ValueError(f"Line {line_number}: duplicate zone '{zone.name}'")
+                        raise ValueError(f"Line {line_number}: duplicate zone"
+                                         + f"'{zone.name}'")
                     else:
                         zones[zone.name] = zone
 
@@ -73,17 +81,21 @@ class Parser:
                     _, data = line.split(":", 1)
                     zone = self._parse_zone(data.strip())
                     if zone.name in zones:
-                        raise ValueError(f"Line {line_number}: duplicate zone '{zone.name}'")
+                        raise ValueError(f"Line {line_number}: "
+                                         + f"duplicate zone '{zone.name}'")
                     else:
                         zones[zone.name] = zone
 
                 elif line.startswith("connection:"):
                     _, data = line.split(":", 1)
-                    edge = self._parse_connection(data.strip(), zones, line_number)
+                    edge = self._parse_connection(data.strip(),
+                                                  zones, line_number)
                     if edge:
-                        edge_key = tuple(sorted([edge.zone_a.name, edge.zone_b.name]))
+                        edge_key = tuple(sorted([
+                            edge.zone_a.name, edge.zone_b.name]))
                         if edge_key in seen_connections:
-                            raise ValueError(f"Line {line_number}: duplicate connection")
+                            raise ValueError(f"Line {line_number}: duplicate "
+                                             + "connection")
                         seen_connections.add(edge_key)
                         edges.append(edge)
                 else:
@@ -102,7 +114,8 @@ class Parser:
         """Parse the content after a hub prefix into a Zone object.
 
         Args:
-            line: The string after the hub prefix, e.g. "roof1 3 4 [zone=restricted color=red]"
+            line: The string after the hub prefix, e.g. "roof1 3 4
+            [zone=restricted color=red]"
 
         Returns:
             A Zone instance, or None if the line is empty.
@@ -159,7 +172,8 @@ class Parser:
                           e.g. "[zone=restricted color=red max_drones=2]"
 
         Returns:
-            A dict of key-value pairs, e.g. {"zone": "restricted", "color": "red"}
+            A dict of key-value pairs, e.g.
+            {"zone": "restricted", "color": "red"}
             Returns an empty dict if the input is empty.
         """
         if not metadata_str:
@@ -176,7 +190,8 @@ class Parser:
 
         return res
 
-    def _parse_connection(self, line: str, zones: dict[str, Zone], line_number: int) -> Edge:
+    def _parse_connection(self, line: str, zones: dict[str, Zone],
+                          line_number: int) -> Edge:
         """Parse the content after 'connection:' into an Edge object.
 
         Args:
@@ -201,13 +216,15 @@ class Parser:
             metadata = {}
 
         if "-" not in part1:
-            raise ValueError(f"Line {line_number}: invalid connection format: {line}")
+            raise ValueError(f"Line {line_number}: invalid "
+                             + f"connection format: {line}")
 
         parts = part1.split("-")
         if len(parts) != 2:
-            raise ValueError(f"Line {line_number}: invalid connection format: {line}")
+            raise ValueError(f"Line {line_number}: invalid "
+                             + f"connection format: {line}")
 
-        name_zone_a, name_zone_b = parts    
+        name_zone_a, name_zone_b = parts
         zone_a = zones.get(name_zone_a.strip())
         zone_b = zones.get(name_zone_b.strip())
 
@@ -221,6 +238,7 @@ class Parser:
             raise ValueError(f"Line {line_number}: invalid max_link_capacity")
 
         if max_link_capacity <= 0:
-            raise ValueError(f"Line {line_number}: max_link_capacity must be positive")
+            raise ValueError(f"Line {line_number}: max_link_capacity"
+                             + "must be positive")
 
         return Edge(zone_a, zone_b, max_link_capacity)

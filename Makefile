@@ -12,7 +12,9 @@ MAIN = src/main.py
 #FILE = src/maps/hard/01_maze_nightmare.txt
 #FILE = src/maps/hard/02_capacity_hell.txt
 #FILE = src/maps/hard/03_ultimate_challenge.txt
-FILE = src/maps/challenger/01_the_impossible_dream.txt
+#FILE = src/maps/challenger/01_the_impossible_dream.txt
+#FILE = src/maps/challenger/02_without_color.txt
+
 REQS = requirements.txt
 
 all: install
@@ -37,16 +39,12 @@ debug: $(VENV_BIN)/activate
 	$(PYTHON) -m pdb $(MAIN) $(FILE)
 
 lint: $(VENV_BIN)/activate
-	$(VENV_BIN)/flake8 .
-	$(VENV_BIN)/mypy . --warn-return-any \
+	$(VENV_BIN)/flake8 . --exclude=$(VENV_DIR),__pycache__,.mypy_cache
+	$(VENV_BIN)/mypy . --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs \
 	--warn-unused-ignores \
 	--ignore-missing-imports \
 	--disallow-untyped-defs \
 	--check-untyped-defs
-
-lint-strict: $(VENV_BIN)/activate
-	$(VENV_BIN)/flake8 .
-	$(VENV_BIN)/mypy . --strict
 
 clean:
 	find . -type d -name "__pycache__" -exec rm -rf {} +
@@ -55,4 +53,4 @@ clean:
 fclean: clean
 	rm -fr $(VENV_DIR)
 
-.PHONY: all install run visual debug lint lint-strict clean fclean
+.PHONY: all install run visual debug lint clean fclean

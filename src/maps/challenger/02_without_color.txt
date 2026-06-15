@@ -1,0 +1,108 @@
+# No Colors Showcase: layout inspired by the challenger map,
+# but with NO custom colors defined anywhere.
+# Used to confirm that the default legend
+# (Normal / Restricted / Priority / Blocked) appears correctly.
+
+nb_drones: 10
+
+# === LAYER 0: Entry gates ===
+start_hub: start 0 0 [max_drones=10]
+
+hub: gate1 1 0 [max_drones=1]
+hub: gate2 2 0 [max_drones=1]
+hub: gate3 3 0 [max_drones=1]
+
+# === LAYER 1: Maze with dead ends and a restricted loop ===
+hub: maze_a1 1 1
+hub: maze_a2 2 1
+hub: maze_dead_a 3 1
+
+hub: maze_b1 1 -1
+hub: maze_b2 2 -1
+hub: maze_dead_b 3 -1
+
+hub: loop1 2 2 [zone=restricted]
+hub: loop2 3 2 [zone=restricted]
+hub: loop3 4 2 [zone=restricted]
+hub: loop4 4 1 [zone=restricted]
+
+# === LAYER 2: Capacity squeeze ===
+hub: micro_gate1 4 0 [max_drones=1]
+hub: micro_gate2 5 0 [max_drones=1]
+
+hub: overflow1 4 -1 [zone=restricted max_drones=2]
+hub: overflow2 5 -1 [zone=restricted max_drones=2]
+
+# === LAYER 3: Priority shortcuts ===
+hub: priority1 6 0 [zone=priority max_drones=3]
+hub: priority2 7 0 [zone=priority max_drones=2]
+
+hub: priority_trap1 6 1 [zone=priority]
+hub: priority_dead 7 1
+
+# === LAYER 4: Convergence ===
+hub: conv_restricted1 8 1 [zone=restricted max_drones=1]
+hub: conv_restricted2 8 -1 [zone=restricted max_drones=1]
+hub: conv_normal 8 0 [max_drones=3]
+
+# === LAYER 5: Final stretch ===
+hub: final1 9 0 [max_drones=3]
+hub: final2 10 0 [max_drones=2]
+hub: blocked_shortcut 9 1 [zone=blocked]
+
+end_hub: goal 11 0 [max_drones=10]
+
+# === CONNECTIONS ===
+
+# Layer 0
+connection: start-gate1 [max_link_capacity=2]
+connection: gate1-gate2 [max_link_capacity=1]
+connection: gate2-gate3 [max_link_capacity=1]
+
+# Layer 1: maze branches
+connection: gate1-maze_a1
+connection: maze_a1-maze_a2
+connection: maze_a2-maze_dead_a
+
+connection: gate1-maze_b1
+connection: maze_b1-maze_b2
+connection: maze_b2-maze_dead_b
+
+connection: gate2-loop1
+connection: loop1-loop2
+connection: loop2-loop3
+connection: loop3-loop4
+connection: loop4-loop1
+
+# Escape routes from maze
+connection: maze_a2-micro_gate1
+connection: maze_b2-micro_gate1
+connection: loop4-micro_gate2
+
+# Layer 2: capacity squeeze
+connection: gate3-micro_gate1
+connection: micro_gate1-micro_gate2
+connection: micro_gate1-overflow1
+connection: micro_gate2-overflow2
+connection: overflow1-overflow2
+
+# Layer 3: priority shortcuts and traps
+connection: micro_gate2-priority1
+connection: overflow2-priority1
+connection: priority1-priority2
+connection: priority1-priority_trap1
+connection: priority_trap1-priority_dead
+
+# Layer 4: convergence
+connection: priority2-conv_normal
+connection: priority_trap1-conv_restricted1
+connection: overflow2-conv_restricted2
+connection: conv_restricted1-conv_normal
+connection: conv_restricted2-conv_normal
+
+# Layer 5: final stretch
+connection: conv_normal-final1 [max_link_capacity=3]
+connection: final1-final2 [max_link_capacity=2]
+connection: final2-goal [max_link_capacity=2]
+connection: final1-blocked_shortcut
+connection: blocked_shortcut-goal

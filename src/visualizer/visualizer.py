@@ -5,7 +5,7 @@ from model.graph import Graph
 # ======= ui settings =======
 
 # -- window --
-WINDOW_WIDTH  = 1445
+WINDOW_WIDTH = 1445
 WINDOW_HEIGHT = 545
 WINDOW_TITLE = "Fly-in Drone Simulation - Daniii 💫"
 FPS = 10
@@ -13,12 +13,33 @@ FPS = 10
 # -- colors --
 COLORS = {
     "normal":     (55, 34, 26),
-    "restricted": (234, 83,  39),   
+    "restricted": (234, 83,  39),
     "priority":   (30,  140, 60),
     "blocked":    (245, 172, 180),
     "start":      (30,  80,  200),
     "end":        (140, 30,  200)
 }
+
+COLOR_NAMES = {
+    "green":   (34, 177,  76),
+    "blue":    (52,  131, 235),
+    "red":     (234,  83,  39),
+    "yellow":  (255, 220,  50),
+    "orange":  (255, 140,   0),
+    "purple":  (150,  60, 200),
+    "black":   (20,   20,  20),
+    "brown":   (120,  72,  40),
+    "maroon":  (128,   0,   0),
+    "gold":    (212, 175,  55),
+    "darkred": (139,   0,   0),
+    "violet":  (180,  80, 220),
+    "crimson": (220,  20,  60),
+    "cyan":    (0,   200, 200),
+    "lime":    (160, 220,  40),
+    "magenta": (220,  40, 180),
+    "rainbow": (255, 255, 255),
+}
+
 COLOR_BACKGROUND = (245, 172,  180)
 COLOR_EDGE_ACTIVE = (140, 30,  200)
 COLOR_EDGE = (55, 34, 26)
@@ -36,10 +57,12 @@ IMAGE_DRONE = pygame.image.load("assets/drone.png")
 IMAGE_START = pygame.image.load("assets/start.png")
 IMAGE_END = pygame.image.load("assets/end.png")
 
+
 class Visualizer:
     """Render the simulation step by step with pygame."""
 
-    def __init__(self, graph: Graph, simulation_steps: list[list[str]]) -> None:
+    def __init__(self, graph: Graph,
+                 simulation_steps: list[list[str]]) -> None:
         """Initialize the visualizer state and load the map layout."""
 
         pygame.init()
@@ -51,7 +74,7 @@ class Visualizer:
 
         self.in_transit: dict[str, tuple[str, str]] = {}
         self.drone_positions: dict[str, str] = {}
-        self._init_drone_positions()  
+        self._init_drone_positions()
         self.zone_positions = self._compute_positions()
 
         self.screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
@@ -165,7 +188,8 @@ class Visualizer:
     def _draw(self) -> None:
         """Render one frame of the current simulation state."""
         if IMAGE_BKG:
-            bkg = pygame.transform.scale(IMAGE_BKG, (WINDOW_WIDTH, WINDOW_HEIGHT))
+            bkg = pygame.transform.scale(IMAGE_BKG,
+                                         (WINDOW_WIDTH, WINDOW_HEIGHT))
             self.screen.blit(bkg, (0, 0))
         else:
             self.screen.fill(COLOR_BACKGROUND)
@@ -212,7 +236,9 @@ class Visualizer:
                 rect = img.get_rect(center=position)
                 self.screen.blit(img, rect)
             else:
-                color = COLORS.get(zone.zone_type.value, COLORS["normal"])
+                color = COLOR_NAMES.get(zone.color,
+                                        COLORS.get(zone.zone_type.value,
+                                                   COLORS["normal"]))
                 pygame.draw.circle(self.screen, color, position, ZONE_RADIUS)
 
     def _draw_drones(self) -> None:
@@ -233,7 +259,8 @@ class Visualizer:
                 self.graph.end_zone.name
             ):
                 label = self.font.render(drone_id, True, (255, 255, 255))
-                self.screen.blit(label, (position[0] - label.get_width() // 2, position[1] - DRONE_RADIUS - 14))
+                self.screen.blit(label, (position[0] - label.get_width() // 2,
+                                         position[1] - DRONE_RADIUS - 14))
 
         for (drone_id, (origin, dest)) in self.in_transit.items():
             p1 = self.zone_positions[origin]
@@ -243,10 +270,21 @@ class Visualizer:
             rect = img.get_rect(center=position)
             self.screen.blit(img, rect)
             label = self.font.render(drone_id, True, (255, 255, 255))
-            self.screen.blit(label, (position[0] - label.get_width() // 2, position[1] - DRONE_RADIUS - 14))
+            self.screen.blit(label, (position[0] - label.get_width() // 2,
+                                     position[1] - DRONE_RADIUS - 14))
+
+    def _has_custom_colors(self) -> bool:
+        """Return True if any zone in the map defines a custom color."""
+        for zone in self.graph.zones.values():
+            if zone.color:
+                return True
+        return False
 
     def _draw_legend(self) -> None:
-        """Draw the color legend for zone types."""
+        """Draw the default zone-type legend, but only if the map
+        does not define any custom zone colors."""
+        if self._has_custom_colors():
+            return
 
         legend_items = [
             ("Normal", COLORS["normal"]),
@@ -259,17 +297,9 @@ class Visualizer:
         y = 20
 
         for label, color in legend_items:
-
-            pygame.draw.circle(
-                self.screen,
-                color,
-                (x, y + 8),
-                8
-            )
-
+            pygame.draw.circle(self.screen, color, (x, y + 8), 8)
             text_surface = self.font.render(label, True, (255, 255, 255))
             self.screen.blit(text_surface, (x + 20, y))
-
             y += 25
 
     def _draw_ui(self) -> None:

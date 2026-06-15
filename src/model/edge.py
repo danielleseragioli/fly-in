@@ -3,7 +3,8 @@ from .occupiable import Occupiable
 
 
 class Edge(Occupiable):
-    """Represents a connection between two zones with a drone capacity limit."""
+    """Represents a connection between two zones with
+    a drone capacity limit."""
 
     def __init__(self, zone_a: Zone, zone_b: Zone,
                  max_link_capacity: int):
