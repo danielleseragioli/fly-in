@@ -10,7 +10,11 @@ def main() -> None:
         print("Usage: python main.py <map_file> [--visual]")
         sys.exit(1)
 
-    file_path: str = sys.argv[1]
+    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    if not args:
+        print("Usage: python main.py <map_file> [--visual]")
+        sys.exit(1)
+    file_path: str = args[0]
 
     parser = Parser(file_path)
     graph, nb_drones = parser.parse()

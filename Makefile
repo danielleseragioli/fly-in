@@ -11,7 +11,7 @@ MAIN = src/main.py
 #FILE = src/maps/medium/03_priority_puzzle.txt
 #FILE = src/maps/hard/01_maze_nightmare.txt
 #FILE = src/maps/hard/02_capacity_hell.txt
-#FILE = src/maps/hard/03_ultimate_challenge.txt
+FILE = src/maps/hard/03_ultimate_challenge.txt
 #FILE = src/maps/challenger/01_the_impossible_dream.txt
 #FILE = src/maps/challenger/02_without_color.txt
 

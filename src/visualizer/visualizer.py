@@ -178,11 +178,7 @@ class Visualizer:
             if dest in self.graph.zones:
                 self.drone_positions[drone_id] = dest
             else:
-                parts = dest.split("-")
-                if len(parts) == 2:
-                    origin = parts[0]
-                    destination = parts[1]
-                    self.in_transit[drone_id] = (origin, destination)
+                pass
         self.curr_turn += 1
 
     def _draw(self) -> None:
