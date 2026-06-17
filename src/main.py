@@ -18,6 +18,7 @@ def main() -> None:
 
     parser = Parser(file_path)
     graph, nb_drones = parser.parse()
+    print(graph.get_zone("middle").zone_type)
     pathfinder = Pathfinder(graph)
     simulator = Simulator(graph, nb_drones, pathfinder)
     simulator.create_drones()

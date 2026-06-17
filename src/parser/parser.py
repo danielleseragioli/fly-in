@@ -150,7 +150,9 @@ class Parser:
             raise ValueError(f"Invalid coordinates for zone: {line}")
 
         try:
-            zone_type = ZoneType(metadata.get("zone", "normal"))
+            zone_type = ZoneType(
+                metadata.get("zone", metadata.get("type", "normal"))
+            )
         except ValueError:
             raise ValueError(f"Invalid zone type: {metadata.get('zone')}")
 

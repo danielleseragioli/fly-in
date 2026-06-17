@@ -1,0 +1,128 @@
+#test Zone occupancy rules ----------
+
+# TEST 1 - Basic capacity enforcement
+
+nb_drones: 3
+
+start_hub: start 0 0 [max_drones=3]
+hub: middle 1 0 [max_drones=1]
+end_hub: goal 2 0 [max_drones=3]
+
+connection: start-middle
+connection: middle-goal
+
+
+# TEST 2 - Increased capacity allows sharing
+
+nb_drones: 2
+
+start_hub: start 0 0 [max_drones=2]
+hub: middle 1 0 [max_drones=2]
+end_hub: goal 2 0 [max_drones=2]
+
+connection: start-middle
+connection: middle-goal
+
+
+# TEST 3 - Congestion in middle hub
+
+nb_drones: 3
+
+start_hub: start 0 0 [max_drones=3]
+hub: middle 1 0 [max_drones=1]
+end_hub: goal 2 0 [max_drones=3]
+
+connection: start-middle
+connection: middle-goal
+
+
+# TEST 4 - Start and goal shared occupancy
+
+nb_drones: 3
+
+start_hub: start 0 0 [max_drones=10]
+hub: middle 1 0 [max_drones=1]
+end_hub: goal 2 0 [max_drones=10]
+
+connection: start-middle
+connection: middle-goal
+
+# TEST 5 - Bottleneck at middle zone
+
+nb_drones: 4
+
+start_hub: start 0 0 [max_drones=4]
+hub: middle 1 0 [max_drones=1]
+end_hub: goal 2 0 [max_drones=4]
+
+connection: start-middle
+connection: middle-goal
+
+
+# test Movement costs --------------------------
+
+# TEST 1 - Normal movement cost (1 turn)
+
+nb_drones: 1
+
+start_hub: start 0 0 [type=normal]
+hub: middle 1 0 [type=normal]
+end_hub: goal 2 0 [type=normal]
+
+connection: start-middle
+connection: middle-goal
+
+# TEST 2 - Restricted zone costs 2 turns
+
+nb_drones: 1
+
+start_hub: start 0 0 [type=normal]
+hub: middle 1 0 [type=restricted]
+end_hub: goal 2 0 [type=normal]
+
+connection: start-middle
+connection: middle-goal
+
+# TEST 3 - Priority zone preference
+
+nb_drones: 1
+
+start_hub: start 0 0 [type=normal]
+hub1: pathA 1 0 [type=normal]
+hub2: pathB 1 1 [type=priority]
+end_hub: goal 2 0 [type=normal]
+
+connection: start-pathA
+connection: pathA-goal
+
+connection: start-pathB
+connection: pathB-goal
+
+# TEST 4 - Blocked zone is ignored
+
+nb_drones: 1
+
+start_hub: start 0 0 [type=normal]
+hub: middle 1 0 [type=blocked]
+end_hub: goal 2 0 [type=normal]
+
+connection: start-middle
+connection: middle-goal
+
+#test Connection capacity -------------------
+
+#
+#nb_drones: 2
+#start_hub: start 0 0 [max_drones=2]
+#hub: middle 1 0 [max_drones=2]
+#end_hub: goal 2 0 [max_drones=2]
+#connection: start-middle
+#connection: middle-goal
+
+#
+#nb_drones: 2
+#start_hub: start 0 0 [max_drones=2]
+#hub: middle 1 0 [max_drones=2]
+#end_hub: goal 2 0 [max_drones=2]
+#connection: start-middle [max_link_capacity=2]
+#connection: middle-goal [max_link_capacity=2]

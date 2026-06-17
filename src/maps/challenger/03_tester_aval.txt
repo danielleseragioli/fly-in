@@ -1,0 +1,15 @@
+#test Zone occupancy rules ----------
+# TEST 3 - Priority zone preference
+
+nb_drones: 1
+
+start_hub: start 0 0 [type=normal]
+hub1: pathA 1 0 [type=normal]
+hub2: pathB 1 1 [type=priority]
+end_hub: goal 2 0 [type=normal]
+
+connection: start-pathA
+connection: pathA-goal
+
+connection: start-pathB
+connection: pathB-goal
