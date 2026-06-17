@@ -1,4 +1,4 @@
-#test Zone occupancy rules ----------
+#test Zone occupancy rules ----------------------------------------
 
 # TEST 1 - Basic capacity enforcement
 
@@ -59,7 +59,7 @@ connection: start-middle
 connection: middle-goal
 
 
-# test Movement costs --------------------------
+# test Movement costs -------------------------------------------------
 
 # TEST 1 - Normal movement cost (1 turn)
 
@@ -109,7 +109,7 @@ end_hub: goal 2 0 [type=normal]
 connection: start-middle
 connection: middle-goal
 
-#test Connection capacity -------------------
+#test Connection capacity -------------------------------------------
 
 #
 #nb_drones: 2

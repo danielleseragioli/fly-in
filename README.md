@@ -209,7 +209,6 @@ D1-goal D2-goal
 ```
 
 The simulation ends when every drone reaches the destination hub.
-
 ---
 
 # Visual Representation
